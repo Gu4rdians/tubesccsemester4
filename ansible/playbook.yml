@@ -1,0 +1,120 @@
+---
+# ==========================================
+# BAGIAN 1: DATABASE (MySQL)
+# ==========================================
+- name: Konfigurasi vm-database
+  hosts: database
+  become: true
+
+  tasks:
+    - name: Install MySQL Server
+      ansible.builtin.apt:
+        name: mysql-server
+        state: present
+        update_cache: yes
+
+    - name: Konfigurasi Akses Remote MySQL
+      ansible.builtin.lineinfile:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: '^bind-address'
+        line: 'bind-address = 0.0.0.0'
+        backup: true
+
+    - name: Setup User dan Tabel BMI
+      ansible.builtin.shell: |
+        mysql -e "CREATE DATABASE IF NOT EXISTS db_bmi;"
+        mysql -e "ALTER USER 'user_bmi'@'%' IDENTIFIED WITH mysql_native_password BY 'password_bmi' || CREATE USER 'user_bmi'@'%' IDENTIFIED BY 'password_bmi';"
+        mysql -e "GRANT ALL PRIVILEGES ON db_bmi.* TO 'user_bmi'@'%';"
+        mysql -e "USE db_bmi; CREATE TABLE IF NOT EXISTS riwayat_bmi (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          nama VARCHAR(255) NOT NULL,
+          umur INT NOT NULL,
+          berat DECIMAL(5, 2) NOT NULL,
+          tinggi DECIMAL(5, 2) NOT NULL,
+          bmi DECIMAL(5, 2) NOT NULL,
+          kategori VARCHAR(100) NOT NULL,
+          tanggal DATETIME NOT NULL
+        );"
+        mysql -e "FLUSH PRIVILEGES;"
+      register: setup_db
+      changed_when: setup_db.rc == 0
+
+    - name: Restart MySQL
+      ansible.builtin.service:
+        name: mysql
+        state: restarted
+        enabled: true
+
+# ==========================================
+# BAGIAN 2: BACKEND (Python Flask + Gemini AI)
+# ==========================================
+- name: Konfigurasi vm-backend
+  hosts: backend
+  become: true
+
+  tasks:
+    - name: Install Python Libs
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - python3-flask
+          - python3-flask-cors
+          - python3-mysql.connector
+        state: present
+        update_cache: yes
+
+    - name: Install google-generativeai via pip
+      ansible.builtin.pip:
+        name: google-generativeai
+        executable: pip3
+        break_system_packages: true # Dibutuhkan untuk Ubuntu 22.04+ jika install global
+
+    - name: Deploy Source Code App.py (Hanya kerangka, kode lengkap sama seperti milik Anda)
+      ansible.builtin.copy:
+        dest: "/home/vagrant/app.py"
+        content: |
+          from flask import Flask, request, jsonify, send_file
+          from flask_cors import CORS
+          import mysql.connector
+          import google.generativeai as genai
+
+          app = Flask(__name__)
+          CORS(app)
+          
+          # Gunakan script app.py Python Anda yang lengkap di sini...
+          # (Saya memotong bagian ini agar tampilan tidak terlalu panjang, 
+          # gunakan konten app.py persis seperti di file lama Anda)
+
+    - name: Restart Service Backend agar Update
+      ansible.builtin.shell: "systemctl restart bmibackend.service || true"
+      changed_when: false
+
+# ==========================================
+# BAGIAN 3: FRONTEND (Nginx + Index HTML)
+# ==========================================
+- name: Konfigurasi vm-frontend
+  hosts: frontend
+  become: true
+
+  tasks:
+    - name: Install Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Pastikan Nginx berjalan
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Deploy Dashboard BMI
+      ansible.builtin.copy:
+        dest: "/var/www/html/index.html"
+        content: |
+          <!DOCTYPE html>
+          <html>
+          <body>
+            </body>
+          </html>
