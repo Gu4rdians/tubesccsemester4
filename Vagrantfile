@@ -6,7 +6,7 @@ Vagrant.configure("2") do |config|
     ["database", "192.168.56.11", "VM-Database-KasRW"],
     ["backend",  "192.168.56.10", "VM-Backend-KasRW"],
     ["frontend", "192.168.56.12", "VM-Frontend-KasRW"]
-  ].each do |name, ip, vname|
+  ].each do |name, ip, vname| s
 
     config.vm.define name do |machine|
       machine.vm.hostname = name

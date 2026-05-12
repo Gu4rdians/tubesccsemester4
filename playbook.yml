@@ -194,7 +194,7 @@
 
         - name: Restart Service Backend agar Update
           shell: "systemctl restart bmibackend.service || true"
-      when: target_node == 'backend'
+      when: target_node == 'backend' 
 
     # ==========================================
     # BAGIAN 3: FRONTEND (Nginx + Index HTML)
