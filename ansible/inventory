@@ -1,0 +1,14 @@
+[database]
+vm-database ansible_host=192.168.56.11
+
+[backend]
+vm-backend ansible_host=192.168.56.10
+
+[frontend]
+vm-frontend ansible_host=192.168.56.12
+
+[all:vars]
+ansible_user=vagrant
+# Karena kita mengeksekusi dari host, Vagrant/Ansible bisa menggunakan default password vagrant
+ansible_password=vagrant
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
