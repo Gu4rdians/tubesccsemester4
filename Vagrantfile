@@ -8,6 +8,7 @@ Vagrant.configure("2") do |config|
     db.vm.provider "virtualbox" do |vb|
       vb.name   = "vm-database"
       vb.memory = "1024"
+      vb.gui    = true
     end
   end
 
@@ -19,6 +20,7 @@ Vagrant.configure("2") do |config|
     be.vm.provider "virtualbox" do |vb|
       vb.name   = "vm-backend"
       vb.memory = "1024"
+      vb.gui    = true
     end
   end
 
@@ -30,6 +32,7 @@ Vagrant.configure("2") do |config|
     fe.vm.provider "virtualbox" do |vb|
       vb.name   = "vm-frontend"
       vb.memory = "1024"
+      vb.gui    = true
     end
 
     # Install sshpass agar Ansible bisa menggunakan password auth
