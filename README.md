@@ -330,7 +330,9 @@ vagrant status
 
 ## 👥 Tim Pengembang
 > **Mahatamtama Ariya Setiawan - 101032400058**: Project Manager & Back-End Developer
+
 > **Fathan Qalby - 101032400058**: Git Manager & Front-End Developer
+
 > **Galeh Garda Wirayudha - 101032400058**: Media Manager & Database Developer
 
 > **Mata Kuliah**: Komunikasi dan Jaringan Komputer — Semester 4  
