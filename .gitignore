@@ -1,0 +1,9 @@
+# Vagrant
+.vagrant/
+
+# Ansible Vault Password — JANGAN PERNAH DICOMMIT!
+ansible/vault_password.txt
+
+# Secrets yang belum dienkripsi (jaga-jaga)
+*.secret
+*.env

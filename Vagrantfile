@@ -7,9 +7,11 @@ Vagrant.configure("2") do |config|
     db.vm.box      = "bento/ubuntu-22.04"
     db.vm.hostname = "vm-database"
     db.vm.network "private_network", ip: "192.168.56.11"
+    
     db.vm.provider "virtualbox" do |vb|
-      vb.name   = "vm-database"
-      vb.memory = "1024"
+      vb.name   = "vm-database-bmi"
+      vb.memory = "2048"
+      vb.cpus   = 2
     end
   end
 
@@ -20,45 +22,67 @@ Vagrant.configure("2") do |config|
     be.vm.box      = "bento/ubuntu-22.04"
     be.vm.hostname = "vm-backend"
     be.vm.network "private_network", ip: "192.168.56.10"
+    
     be.vm.provider "virtualbox" do |vb|
-      vb.name   = "vm-backend"
-      vb.memory = "1024"
+      vb.name   = "vm-backend-bmi"
+      vb.memory = "2048"
+      vb.cpus   = 2
     end
   end
 
   # ==========================================
-  # 3. VM FRONTEND & CONTROL NODE (Dibuat Terakhir)
+  # 3. VM FRONTEND & CONTROL NODE (Terakhir)
   # ==========================================
   config.vm.define "vm-frontend" do |fe|
     fe.vm.box      = "bento/ubuntu-22.04"
     fe.vm.hostname = "vm-frontend"
     fe.vm.network "private_network", ip: "192.168.56.12"
+
     fe.vm.provider "virtualbox" do |vb|
-      vb.name   = "vm-frontend"
-      vb.memory = "1024"
+      vb.name   = "vm-frontend-bmi"
+      vb.memory = "2048"
+      vb.cpus   = 2
     end
 
-    # Install sshpass agar Ansible bisa masuk menggunakan password Vagrant secara otomatis
-    fe.vm.provision "shell", inline: "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y sshpass"
+    # Install dependencies dan auto-enkripsi secrets.yml sebelum Ansible jalan
+    fe.vm.provision "shell", inline: <<-SHELL
+      apt-get update -qq
+      DEBIAN_FRONTEND=noninteractive apt-get install -y sshpass ansible
 
-    # Jalankan Ansible (limit="all" memastikan semua VM dikonfigurasi)
+      SECRETS_FILE="/vagrant/ansible/vars/secrets.yml"
+      VAULT_PASS="/vagrant/ansible/vault_password.txt"
+
+      if [ -f "$SECRETS_FILE" ]; then
+        if grep -q "ANSIBLE_VAULT" "$SECRETS_FILE"; then
+          echo "✅ secrets.yml sudah terenkripsi, skip enkripsi."
+        else
+          echo "🔐 Mengenkripsi secrets.yml dengan Ansible Vault..."
+          ansible-vault encrypt "$SECRETS_FILE" --vault-password-file "$VAULT_PASS"
+          echo "✅ secrets.yml berhasil dienkripsi!"
+        fi
+      else
+        echo "⚠️  WARNING: File $SECRETS_FILE tidak ditemukan!"
+        exit 1
+      fi
+    SHELL
+
+    # Jalankan Ansible dari dalam VM frontend ini!
     fe.vm.provision "ansible_local" do |ansible|
-      ansible.playbook       = "ansible/playbook.yml"
-      ansible.inventory_path = "ansible/inventory"
-      ansible.limit          = "all"
+      ansible.playbook          = "ansible/playbook.yml"
+      ansible.inventory_path    = "ansible/inventory"
+      ansible.limit             = "all"
+      ansible.vault_password_file = "ansible/vault_password.txt"
     end
 
-    # Print Notifikasi Sukses dan URL di akhir eksekusi
+    # Pesan sukses
     fe.vm.provision "shell", inline: <<-SHELL
       echo -e "\n\n"
       echo "================================================================="
-      echo "🎯 DEPLOYMENT SELESAI & BERHASIL 100%!"
-      echo "🌐 Aplikasi BMI Tracker kamu sudah menyala."
-      echo "👉 Silakan CTRL+Click atau buka link ini di browser:"
-      echo "   http://192.168.56.12"
+      echo "🎯 DEPLOYMENT BMI TRACKER SELESAI & BERHASIL 100%!"
+      echo "👉 Silakan buka link ini di browser: http://192.168.56.12"
       echo "================================================================="
       echo -e "\n\n"
     SHELL
-  end
+  end 
 
 end

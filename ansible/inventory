@@ -5,7 +5,7 @@ vm-database ansible_host=192.168.56.11
 vm-backend ansible_host=192.168.56.10
 
 [frontend]
-vm-frontend ansible_host=127.0.0.1 ansible_connection=local
+vm-frontend ansible_host=192.168.56.12
 
 [all:vars]
 ansible_user=vagrant
